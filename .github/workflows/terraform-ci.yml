@@ -1,0 +1,19 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    branches: [ main, next ]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    uses: ./.github/workflows/terraform-security-scan.yml
+    secrets: inherit
+    
+  integration:
+    needs: terraform
+    uses: ./.github/workflows/integration-tests.yml
+    secrets: inherit
