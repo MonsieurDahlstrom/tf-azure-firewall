@@ -52,7 +52,9 @@ run "firewall_with_premium_sku" {
   }
 
   variables {
-    firewall_sku_tier = "Premium"
+    firewall_sku_tier     = "Premium"
+    resource_group_name   = "rg-firewall-premium-test"
+    environment          = "premium-test"
   }
 
   assert {
@@ -75,6 +77,11 @@ run "firewall_output_validation" {
   command = apply
   module {
     source = "./examples/basic"
+  }
+
+  variables {
+    resource_group_name = "rg-firewall-validation-test"
+    environment        = "validation-test"
   }
 
   assert {
@@ -142,6 +149,11 @@ run "firewall_plan_validation" {
   command = plan
   module {
     source = "./examples/basic"
+  }
+
+  variables {
+    resource_group_name = "rg-firewall-plan-test"
+    environment        = "plan-test"
   }
 
   # Validate that critical resources will be created

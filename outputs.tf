@@ -71,8 +71,8 @@ output "ip_groups" {
   description = "Map of created IP groups and their IDs"
   value = {
     for k, v in azurerm_ip_group.network_groups : k => {
-      id   = v.id
-      name = v.name
+      id    = v.id
+      name  = v.name
       cidrs = v.cidrs
     }
   }

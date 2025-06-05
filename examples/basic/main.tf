@@ -9,7 +9,16 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+  subscription_id = var.subscription_id
+  client_id       = var.client_id
+  client_secret   = var.use_oidc ? null : var.client_secret
+  tenant_id       = var.tenant_id
+  use_oidc        = var.use_oidc
 }
 
 # Create a resource group for the example
@@ -36,16 +45,16 @@ module "firewall" {
     address_space          = ["10.0.0.0/16"]
     firewall_subnet_cidr   = "10.0.1.0/26"
     management_subnet_cidr = "10.0.2.0/26"
-    create_vnet           = true
+    create_vnet            = true
   }
 
   # Basic firewall configuration
   firewall_config = {
     name              = "${var.project_name}-${var.environment}-firewall"
     sku_tier          = var.firewall_sku_tier
-    threat_intel_mode = "Alert"
+    # threat_intel_mode defaults to "Deny" for security compliance
     public_ip_count   = 1
-    zones             = []  # No zones for simplicity
+    zones             = [] # No zones for simplicity
     forced_tunneling  = false
     dns_servers       = []
   }

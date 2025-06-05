@@ -15,15 +15,15 @@ variable "hub_vnet_config" {
     vnet_name              = optional(string, "hub-vnet")
     address_space          = optional(list(string), ["10.0.0.0/16"])
     firewall_subnet_cidr   = optional(string, "10.0.1.0/26")
-    management_subnet_cidr = optional(string, "10.0.2.0/26")  # For forced tunneling
-    create_vnet           = optional(bool, true)
+    management_subnet_cidr = optional(string, "10.0.2.0/26") # For forced tunneling
+    create_vnet            = optional(bool, true)
   })
   default = {
     vnet_name              = "hub-vnet"
     address_space          = ["10.0.0.0/16"]
     firewall_subnet_cidr   = "10.0.1.0/26"
     management_subnet_cidr = "10.0.2.0/26"
-    create_vnet           = true
+    create_vnet            = true
   }
   description = "Configuration for Hub Virtual Network"
 }
@@ -75,17 +75,17 @@ variable "firewall_config" {
     })), [])
   })
   default = {
-    name              = "azure-firewall"
-    sku_tier          = "Standard"
-    threat_intel_mode = "Deny"
-    public_ip_count   = 1
-    public_ip_names   = []
-    zones             = []
-    forced_tunneling  = false
-    dns_servers       = []
-    private_ip_ranges = []
+    name                     = "azure-firewall"
+    sku_tier                 = "Standard"
+    threat_intel_mode        = "Deny"
+    public_ip_count          = 1
+    public_ip_names          = []
+    zones                    = []
+    forced_tunneling         = false
+    dns_servers              = []
+    private_ip_ranges        = []
     idps_signature_overrides = []
-    idps_traffic_bypass = []
+    idps_traffic_bypass      = []
   }
   description = "Configuration for Azure Firewall. Note: IDPS features require Premium SKU tier for security compliance."
 }
@@ -145,8 +145,8 @@ variable "network_policies" {
   validation {
     condition = alltrue([
       for k, v in var.network_policies : contains([
-        "allow_all_logged", 
-        "explicit_allow_only", 
+        "allow_all_logged",
+        "explicit_allow_only",
         "deny_all"
       ], v.egress_policy)
     ])
@@ -156,10 +156,10 @@ variable "network_policies" {
 
 variable "default_egress_policy" {
   type = object({
-    action          = string
-    priority        = number
-    log_traffic     = optional(bool, true)
-    description     = optional(string, "Default egress policy for unmatched traffic")
+    action      = string
+    priority    = number
+    log_traffic = optional(bool, true)
+    description = optional(string, "Default egress policy for unmatched traffic")
   })
   default = {
     action      = "Deny"
@@ -180,19 +180,19 @@ variable "custom_application_rules" {
     action      = string
     description = optional(string)
     rules = list(object({
-      name             = string
-      source_addresses = optional(list(string))
-      source_ip_groups = optional(list(string))
-      destination_fqdns = optional(list(string))
+      name                  = string
+      source_addresses      = optional(list(string))
+      source_ip_groups      = optional(list(string))
+      destination_fqdns     = optional(list(string))
       destination_addresses = optional(list(string))
-      destination_urls = optional(list(string))
+      destination_urls      = optional(list(string))
       protocols = list(object({
         port = string
         type = string
       }))
-      web_categories           = optional(list(string))
-      terminate_tls           = optional(bool, false)
-      http_headers            = optional(list(object({
+      web_categories = optional(list(string))
+      terminate_tls  = optional(bool, false)
+      http_headers = optional(list(object({
         name  = string
         value = string
       })))

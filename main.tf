@@ -16,7 +16,7 @@ locals {
   # Network Policy Implementation
   network_policy_sources = {
     for policy_name, policy in var.network_policies : policy_name => [
-      for group_key in policy.network_group_keys : 
+      for group_key in policy.network_group_keys :
       azurerm_ip_group.network_groups[group_key].id
       if contains(keys(var.network_groups), group_key)
     ]
@@ -106,7 +106,8 @@ resource "azurerm_firewall_policy" "digital_hub" {
   name                = "${var.firewall_config.name}-policy"
   resource_group_name = var.resource_group_name
   location            = var.location
-  
+  sku                 = var.firewall_config.sku_tier
+
   # DNS configuration
   dynamic "dns" {
     for_each = length(var.firewall_config.dns_servers) > 0 ? [1] : []
@@ -212,8 +213,8 @@ resource "azurerm_ip_group" "network_groups" {
     Description = each.value.description != null ? each.value.description : "Network group for ${each.key}"
   })
 
-  lifecycle { 
-    ignore_changes = [tags["created_on"]] 
+  lifecycle {
+    ignore_changes = [tags["created_on"]]
   }
 }
 
@@ -233,10 +234,10 @@ resource "azurerm_firewall_policy_rule_collection_group" "custom_application_rul
     dynamic "rule" {
       for_each = each.value.rules
       content {
-        name              = rule.value.name
-        source_addresses  = rule.value.source_addresses
-        source_ip_groups  = rule.value.source_ip_groups != null ? [
-          for ip_group in rule.value.source_ip_groups : 
+        name             = rule.value.name
+        source_addresses = rule.value.source_addresses
+        source_ip_groups = rule.value.source_ip_groups != null ? [
+          for ip_group in rule.value.source_ip_groups :
           azurerm_ip_group.network_groups[ip_group].id
           if contains(keys(var.network_groups), ip_group)
         ] : null
@@ -282,16 +283,16 @@ resource "azurerm_firewall_policy_rule_collection_group" "custom_network_rules" 
     dynamic "rule" {
       for_each = each.value.rules
       content {
-        name                  = rule.value.name
-        source_addresses      = rule.value.source_addresses
-        source_ip_groups      = rule.value.source_ip_groups != null ? [
-          for ip_group in rule.value.source_ip_groups : 
+        name             = rule.value.name
+        source_addresses = rule.value.source_addresses
+        source_ip_groups = rule.value.source_ip_groups != null ? [
+          for ip_group in rule.value.source_ip_groups :
           azurerm_ip_group.network_groups[ip_group].id
           if contains(keys(var.network_groups), ip_group)
         ] : null
         destination_addresses = rule.value.destination_addresses
         destination_ip_groups = rule.value.destination_ip_groups != null ? [
-          for ip_group in rule.value.destination_ip_groups : 
+          for ip_group in rule.value.destination_ip_groups :
           azurerm_ip_group.network_groups[ip_group].id
           if contains(keys(var.network_groups), ip_group)
         ] : null
@@ -319,10 +320,10 @@ resource "azurerm_firewall_policy_rule_collection_group" "custom_nat_rules" {
     dynamic "rule" {
       for_each = each.value.rules
       content {
-        name                = rule.value.name
-        source_addresses    = rule.value.source_addresses
-        source_ip_groups    = rule.value.source_ip_groups != null ? [
-          for ip_group in rule.value.source_ip_groups : 
+        name             = rule.value.name
+        source_addresses = rule.value.source_addresses
+        source_ip_groups = rule.value.source_ip_groups != null ? [
+          for ip_group in rule.value.source_ip_groups :
           azurerm_ip_group.network_groups[ip_group].id
           if contains(keys(var.network_groups), ip_group)
         ] : null
@@ -355,14 +356,14 @@ resource "azurerm_firewall_policy_rule_collection_group" "allow_all_logged_polic
     rule {
       name             = "allow-all-web-traffic"
       source_ip_groups = local.network_policy_sources[each.key]
-      
+
       destination_fqdns = ["*"]
-      
+
       protocols {
         type = "Http"
         port = 80
       }
-      
+
       protocols {
         type = "Https"
         port = 443
@@ -377,11 +378,11 @@ resource "azurerm_firewall_policy_rule_collection_group" "allow_all_logged_polic
     action   = "Allow"
 
     rule {
-      name             = "allow-all-network-traffic"
-      source_ip_groups = local.network_policy_sources[each.key]
+      name                  = "allow-all-network-traffic"
+      source_ip_groups      = local.network_policy_sources[each.key]
       destination_addresses = ["*"]
-      destination_ports = ["*"]
-      protocols = ["Any"]
+      destination_ports     = ["*"]
+      protocols             = ["Any"]
     }
   }
 }
@@ -397,15 +398,15 @@ resource "azurerm_firewall_policy_rule_collection_group" "explicit_allow_only_po
   # Allowed destinations application rules
   dynamic "application_rule_collection" {
     for_each = each.value.allowed_destinations != null && length(each.value.allowed_destinations.fqdns) > 0 ? [1] : []
-    
+
     content {
       name     = "${each.key}-allowed-apps"
       priority = each.value.priority_base
       action   = "Allow"
 
       rule {
-        name             = "allowed-fqdns"
-        source_ip_groups = local.network_policy_sources[each.key]
+        name              = "allowed-fqdns"
+        source_ip_groups  = local.network_policy_sources[each.key]
         destination_fqdns = each.value.allowed_destinations.fqdns
 
         dynamic "protocols" {
@@ -413,7 +414,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "explicit_allow_only_po
           content {
             type = title(protocols.value)
             port = contains(each.value.allowed_destinations.ports, "443") && protocols.value == "TCP" ? 443 : (
-              contains(each.value.allowed_destinations.ports, "80") && protocols.value == "TCP" ? 80 : 
+              contains(each.value.allowed_destinations.ports, "80") && protocols.value == "TCP" ? 80 :
               tonumber(each.value.allowed_destinations.ports[0])
             )
           }
@@ -425,7 +426,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "explicit_allow_only_po
   # Allowed destinations network rules
   dynamic "network_rule_collection" {
     for_each = each.value.allowed_destinations != null && length(each.value.allowed_destinations.addresses) > 0 ? [1] : []
-    
+
     content {
       name     = "${each.key}-allowed-networks"
       priority = each.value.priority_base + 1
@@ -444,15 +445,15 @@ resource "azurerm_firewall_policy_rule_collection_group" "explicit_allow_only_po
   # Blocked destinations (explicit deny)
   dynamic "application_rule_collection" {
     for_each = each.value.blocked_destinations != null && length(each.value.blocked_destinations.fqdns) > 0 ? [1] : []
-    
+
     content {
       name     = "${each.key}-blocked-apps"
       priority = each.value.priority_base + 10
       action   = "Deny"
 
       rule {
-        name             = "blocked-fqdns"
-        source_ip_groups = local.network_policy_sources[each.key]
+        name              = "blocked-fqdns"
+        source_ip_groups  = local.network_policy_sources[each.key]
         destination_fqdns = each.value.blocked_destinations.fqdns
 
         dynamic "protocols" {
@@ -482,15 +483,15 @@ resource "azurerm_firewall_policy_rule_collection_group" "deny_all_policies" {
     action   = "Deny"
 
     rule {
-      name             = "deny-all-app-traffic"
-      source_ip_groups = local.network_policy_sources[each.key]
+      name              = "deny-all-app-traffic"
+      source_ip_groups  = local.network_policy_sources[each.key]
       destination_fqdns = ["*"]
-      
+
       protocols {
         type = "Http"
         port = 80
       }
-      
+
       protocols {
         type = "Https"
         port = 443
@@ -505,11 +506,11 @@ resource "azurerm_firewall_policy_rule_collection_group" "deny_all_policies" {
     action   = "Deny"
 
     rule {
-      name             = "deny-all-network-traffic"
-      source_ip_groups = local.network_policy_sources[each.key]
+      name                  = "deny-all-network-traffic"
+      source_ip_groups      = local.network_policy_sources[each.key]
       destination_addresses = ["*"]
-      destination_ports = ["*"]
-      protocols = ["Any"]
+      destination_ports     = ["*"]
+      protocols             = ["Any"]
     }
   }
 }
@@ -567,11 +568,10 @@ resource "azurerm_monitor_diagnostic_setting" "fw" {
     }
   }
 
-  dynamic "metric" {
+  dynamic "enabled_metric" {
     for_each = data.azurerm_monitor_diagnostic_categories.hub.metrics
     content {
-      category = metric.value
-      enabled  = true
+      category = enabled_metric.value
     }
   }
 }
