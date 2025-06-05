@@ -9,40 +9,85 @@ variable "location" {
   description = "The Azure region where resources will be created"
 }
 
-# Virtual Hub variables
-variable "virtual_hub_id" {
-  type        = string
-  description = "The ID of the virtual hub"
+# Hub Virtual Network Configuration
+variable "hub_vnet_config" {
+  type = object({
+    vnet_name              = optional(string, "hub-vnet")
+    address_space          = optional(list(string), ["10.0.0.0/16"])
+    firewall_subnet_cidr   = optional(string, "10.0.1.0/26")
+    management_subnet_cidr = optional(string, "10.0.2.0/26")  # For forced tunneling
+    create_vnet           = optional(bool, true)
+  })
+  default = {
+    vnet_name              = "hub-vnet"
+    address_space          = ["10.0.0.0/16"]
+    firewall_subnet_cidr   = "10.0.1.0/26"
+    management_subnet_cidr = "10.0.2.0/26"
+    create_vnet           = true
+  }
+  description = "Configuration for Hub Virtual Network"
 }
 
-# DNS Resolver variables
-variable "dns_resolver_private_ip" {
+# Existing Hub VNet (for when create_vnet = false)
+variable "existing_hub_vnet_id" {
   type        = string
-  description = "The private IP address of the DNS resolver inbound endpoint"
+  default     = null
+  description = "ID of existing hub virtual network (used when hub_vnet_config.create_vnet = false)"
 }
 
-# GitHub Runner Network variables
-variable "github_runner_network_address_space" {
-  type        = list(string)
-  description = "The address space of the GitHub runner network"
+variable "existing_firewall_subnet_id" {
+  type        = string
+  default     = null
+  description = "ID of existing AzureFirewallSubnet (used when hub_vnet_config.create_vnet = false)"
 }
 
-variable "github_runner_network_id" {
+variable "existing_management_subnet_id" {
   type        = string
-  description = "The ID of the GitHub runner virtual network"
-}
-
-# VPN Network variables
-variable "vpn_network_address_space" {
-  type        = string
-  description = "The address space of the VPN network"
+  default     = null
+  description = "ID of existing AzureFirewallManagementSubnet (used when hub_vnet_config.create_vnet = false)"
 }
 
 # Firewall configuration variables
-variable "sku_tier" {
-  type        = string
-  default     = "Standard"
-  description = "The SKU tier for the firewall"
+variable "firewall_config" {
+  type = object({
+    name              = optional(string, "azure-firewall")
+    sku_tier          = optional(string, "Standard")
+    threat_intel_mode = optional(string, "Deny")
+    public_ip_count   = optional(number, 1)
+    public_ip_names   = optional(list(string), [])
+    zones             = optional(list(string), [])
+    forced_tunneling  = optional(bool, false)
+    dns_servers       = optional(list(string), [])
+    private_ip_ranges = optional(list(string), [])
+    idps_signature_overrides = optional(list(object({
+      id    = string
+      state = string
+    })), [])
+    idps_traffic_bypass = optional(list(object({
+      name                  = string
+      protocol              = string
+      description           = optional(string)
+      destination_addresses = optional(list(string))
+      destination_ip_groups = optional(list(string))
+      destination_ports     = optional(list(string))
+      source_addresses      = optional(list(string))
+      source_ip_groups      = optional(list(string))
+    })), [])
+  })
+  default = {
+    name              = "azure-firewall"
+    sku_tier          = "Standard"
+    threat_intel_mode = "Deny"
+    public_ip_count   = 1
+    public_ip_names   = []
+    zones             = []
+    forced_tunneling  = false
+    dns_servers       = []
+    private_ip_ranges = []
+    idps_signature_overrides = []
+    idps_traffic_bypass = []
+  }
+  description = "Configuration for Azure Firewall. Note: IDPS features require Premium SKU tier for security compliance."
 }
 
 # Analytics variables
@@ -233,7 +278,7 @@ variable "custom_nat_rules" {
     condition = alltrue([
       for k, v in var.custom_nat_rules : v.action == "Dnat"
     ])
-    error_message = "NAT rules action must be 'Dnat'."
+    error_message = "NAT rule collection action must be 'Dnat'."
   }
   validation {
     condition = alltrue([
@@ -243,7 +288,7 @@ variable "custom_nat_rules" {
         ])
       ])
     ])
-    error_message = "NAT rule protocols must be TCP or UDP."
+    error_message = "NAT rule protocols must be either 'TCP' or 'UDP'."
   }
 }
 

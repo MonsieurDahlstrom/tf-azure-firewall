@@ -32,6 +32,10 @@ variable "firewall_sku_tier" {
   description = "SKU tier of the Azure Firewall"
   type        = string
   default     = "Standard"
+  validation {
+    condition     = contains(["Basic", "Standard", "Premium"], var.firewall_sku_tier)
+    error_message = "Firewall SKU tier must be Basic, Standard, or Premium."
+  }
 }
 
 variable "enable_network_rules" {

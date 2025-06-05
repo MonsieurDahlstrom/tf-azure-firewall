@@ -1,3 +1,25 @@
+# Hub Virtual Network Outputs
+output "hub_virtual_network_id" {
+  description = "The ID of the hub virtual network"
+  value       = var.hub_vnet_config.create_vnet ? azurerm_virtual_network.hub[0].id : var.existing_hub_vnet_id
+}
+
+output "hub_virtual_network_name" {
+  description = "The name of the hub virtual network"
+  value       = var.hub_vnet_config.create_vnet ? azurerm_virtual_network.hub[0].name : null
+}
+
+output "firewall_subnet_id" {
+  description = "The ID of the AzureFirewallSubnet"
+  value       = var.hub_vnet_config.create_vnet ? azurerm_subnet.firewall[0].id : var.existing_firewall_subnet_id
+}
+
+output "firewall_management_subnet_id" {
+  description = "The ID of the AzureFirewallManagementSubnet (if created)"
+  value       = var.hub_vnet_config.create_vnet && var.firewall_config.forced_tunneling ? azurerm_subnet.firewall_management[0].id : var.existing_management_subnet_id
+}
+
+# Firewall Outputs
 output "firewall_id" {
   description = "The ID of the Azure Firewall"
   value       = azurerm_firewall.digital_hub.id
@@ -10,7 +32,22 @@ output "firewall_name" {
 
 output "firewall_private_ip_address" {
   description = "The private IP address of the Azure Firewall"
-  value       = azurerm_firewall.digital_hub.virtual_hub[0].private_ip_address
+  value       = azurerm_firewall.digital_hub.ip_configuration[0].private_ip_address
+}
+
+output "firewall_public_ip_addresses" {
+  description = "List of public IP addresses assigned to the Azure Firewall"
+  value       = azurerm_public_ip.firewall[*].ip_address
+}
+
+output "firewall_public_ip_ids" {
+  description = "List of public IP resource IDs for the Azure Firewall"
+  value       = azurerm_public_ip.firewall[*].id
+}
+
+output "firewall_management_public_ip_address" {
+  description = "The management public IP address of the Azure Firewall (if forced tunneling is enabled)"
+  value       = var.firewall_config.forced_tunneling ? azurerm_public_ip.firewall_management[0].ip_address : null
 }
 
 output "firewall_policy_id" {
@@ -18,6 +55,7 @@ output "firewall_policy_id" {
   value       = azurerm_firewall_policy.digital_hub.id
 }
 
+# Monitoring Outputs
 output "log_analytics_workspace_id" {
   description = "The ID of the Log Analytics workspace for firewall analytics"
   value       = azurerm_log_analytics_workspace.firewall.id
