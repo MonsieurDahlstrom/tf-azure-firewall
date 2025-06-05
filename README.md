@@ -283,22 +283,29 @@ module "firewall" {
 ## Module Structure
 
 ```
-modules/firewall/
-├── 2.1-firewall.tf                    # Main firewall and policy resources
-├── 2.3-firewall-analytics.tf          # Analytics and monitoring
-├── rules-core-infrastructure.tf       # AKS and VPN rules
-├── rules-source-control.tf            # GitHub and GitLab rules
-├── rules-container-registries.tf      # Container registry rules
-├── rules-package-managers.tf          # Package manager rules
-├── rules-cdn-tunneling.tf             # Cloudflare rules
-├── rules-saas-services.tf             # SaaS service rules
-├── rules-business-services.tf         # Business service rules
-├── rules-azure-services.tf            # Azure PaaS service rules
-├── variables.tf                       # Input variables
-├── outputs.tf                         # Output values
-├── versions.tf                        # Provider requirements
-├── README.md                          # This file
-└── MIGRATION_INSTRUCTIONS.md          # Migration guide
+tf-azure-firewall/
+├── main.tf                           # Main firewall resources and policy configurations
+├── variables.tf                      # Input variables and validation
+├── outputs.tf                        # Output values
+├── versions.tf                       # Provider requirements
+├── README.md                         # This documentation
+├── EXAMPLES.md                       # Policy-based configuration examples
+├── LICENSE.md                        # License information
+├── COMMERCIAL_LICENSE.md             # Commercial license details
+├── .pre-commit-config.yaml           # Pre-commit hooks configuration
+├── .tflint.hcl                      # TFLint configuration
+├── .gitignore                        # Git ignore patterns
+├── package.json                      # Node.js dependencies for tooling
+├── examples/                         # Usage examples
+│   └── basic/                       # Basic usage example
+│       ├── main.tf                  # Example configuration
+│       ├── variables.tf             # Example variables
+│       ├── outputs.tf               # Example outputs
+│       └── README.md                # Example documentation
+├── tests/                           # Terraform tests
+│   ├── firewall.tftest.hcl         # Test configurations
+│   └── .auto.tfvars.json           # Test variables
+└── .github/                         # GitHub workflows and templates
 ```
 
 ## Requirements
@@ -446,4 +453,13 @@ enable_crm_rules                   = true  # Uses production Salesforce
 enable_cdn_tunneling_rules         = true
 enable_recruitment_rules           = true
 enable_azure_services_rules        = true
-``` 
+```
+
+## 📜 License
+
+This module is licensed under the [CC BY-NC 4.0 license](https://creativecommons.org/licenses/by-nc/4.0/).  
+You may use, modify, and share this code **for non-commercial purposes only**.
+
+If you wish to use it in a commercial project (e.g., as part of client infrastructure or a paid product), you must obtain a commercial license.
+
+📬 Contact: mathias@monsieurdahlstrom.com
