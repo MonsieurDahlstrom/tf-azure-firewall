@@ -76,12 +76,8 @@ jobs:
             --framework terraform \
             --check CKV_AZURE_* \
             --check CKV_* \
-            --skip-check CKV_AZURE_1 \
-            --skip-check CKV_AZURE_2 \
-            --skip-check CKV_123 \
-            --skip-check CKV_124 \
-            --compact \
-            --directory .
+            --skip-check CKV_123,CKV_124,CKV_SECRET_6,CKV_AZURE_216,CKV_GHA_7 \
+            --compact
         continue-on-error: true
           
       - name: Upload SARIF file

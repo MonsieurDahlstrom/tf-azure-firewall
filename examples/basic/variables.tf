@@ -32,6 +32,10 @@ variable "firewall_sku_tier" {
   description = "SKU tier of the Azure Firewall"
   type        = string
   default     = "Standard"
+  validation {
+    condition     = contains(["Basic", "Standard", "Premium"], var.firewall_sku_tier)
+    error_message = "Firewall SKU tier must be Basic, Standard, or Premium."
+  }
 }
 
 variable "enable_network_rules" {
@@ -44,4 +48,26 @@ variable "enable_application_rules" {
   description = "Whether to enable application rules on the firewall"
   type        = bool
   default     = false
-} 
+}
+
+variable "subscription_id" {
+  type = string
+}
+
+variable "client_id" {
+  type = string
+}
+
+variable "client_secret" {
+  type    = string
+  default = null
+}
+
+variable "tenant_id" {
+  type = string
+}
+
+variable "use_oidc" {
+  type    = bool
+  default = false
+}

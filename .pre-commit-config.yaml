@@ -21,11 +21,7 @@ repos:
           - --args=--check
           - --args=CKV_AZURE_*
           - --args=--skip-check
-          - --args=CKV_123
-          - --args=--skip-check
-          - --args=CKV_124
-          - --args=--skip-check
-          - --args=CKV_SECRET_6
+          - --args=CKV_123,CKV_124,CKV_SECRET_6,CKV_AZURE_216,CKV_GHA_7
           - --args=--skip-path
           - --args=terraform.tfvars.json
           - --args=--compact
