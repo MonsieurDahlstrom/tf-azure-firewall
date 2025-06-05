@@ -31,254 +31,7 @@ This module creates an Azure Firewall with policies, analytics, and monitoring f
 
 ## Usage
 
-### Basic Usage with Core Services Only
-
-```hcl
-module "firewall" {
-  source = "./modules/firewall"
-
-  # Resource Group and Location
-  resource_group_name = azurerm_resource_group.hub.name
-  location           = azurerm_resource_group.hub.location
-
-  # Virtual Hub
-  virtual_hub_id = azurerm_virtual_hub.hub.id
-
-  # DNS Configuration
-  dns_resolver_private_ip = azurerm_private_dns_resolver_inbound_endpoint.dns_resolver_endpoint.ip_configurations[0].private_ip_address
-
-  # GitHub Runner Network
-  github_runner_network_address_space = azurerm_virtual_network.github_runner_network.address_space
-  github_runner_network_id           = azurerm_virtual_network.github_runner_network.id
-
-  # VPN Network
-  vpn_network_address_space = local.vpn_network.address_space
-
-  # Firewall Configuration
-  sku_tier = var.sku_tier
-
-  # Analytics Configuration
-  firewall_analytics_retention_days     = var.firewall_analytics_retention_days
-  firewall_analytics_daily_quota_gbs   = var.firewall_analytics_daily_quota_gbs
-
-  # Service Toggles - Only enable core infrastructure
-  enable_core_infrastructure_rules = true
-  enable_source_control_rules      = true
-  enable_container_registry_rules  = true
-  enable_package_manager_rules     = true
-  enable_azure_services_rules      = true
-
-  # Disable optional services by default
-  enable_content_management_rules    = false
-  enable_authentication_rules        = false
-  enable_communication_rules         = false
-  enable_development_tools_rules     = false
-  enable_api_graphql_rules           = false
-  enable_monitoring_analytics_rules  = false
-  enable_travel_industry_rules       = false
-  enable_payment_processing_rules    = false
-  enable_email_services_rules        = false
-  enable_crm_rules                   = false
-  enable_cdn_tunneling_rules         = false
-  enable_recruitment_rules           = false
-
-  # Tags
-  tags = local.tags
-}
-```
-
-### Production Usage with Business Services
-
-```hcl
-module "firewall" {
-  source = "./modules/firewall"
-
-  # ... basic configuration ...
-
-  # Core services (typically always enabled)
-  enable_core_infrastructure_rules = true
-  enable_source_control_rules      = true
-  enable_container_registry_rules  = true
-  enable_package_manager_rules     = true
-  enable_azure_services_rules      = true
-
-  # Business services (enable as needed)
-  enable_content_management_rules    = true  # Contentful
-  enable_authentication_rules        = true  # Auth0
-  enable_communication_rules         = true  # Slack
-  enable_development_tools_rules     = true  # Cypress, Optimizely
-  enable_api_graphql_rules           = true  # Apollo GraphQL
-  enable_monitoring_analytics_rules  = true  # Grafana, Rapid7
-  enable_travel_industry_rules       = true  # Amadeus, Deutsche Bahn, Sabre
-  enable_payment_processing_rules    = true  # Adyen
-  enable_email_services_rules        = true  # SendGrid
-  enable_crm_rules                   = true  # Salesforce
-  enable_cdn_tunneling_rules         = true  # Cloudflare
-  enable_recruitment_rules           = true  # Jobylon
-
-  # Environment-specific source addresses (customize as needed)
-  development_source_addresses = ["10.163.0.0/18"]
-  staging_source_addresses     = ["10.162.0.0/18"]
-  production_source_addresses  = ["10.161.0.0/18"]
-  production_vm_subnet_addresses = ["10.161.33.0/24"]
-
-  tags = local.tags
-}
-```
-
-### Development Environment Usage
-
-```hcl
-module "firewall" {
-  source = "./modules/firewall"
-
-  # ... basic configuration ...
-
-  # Core services
-  enable_core_infrastructure_rules = true
-  enable_source_control_rules      = true
-  enable_container_registry_rules  = true
-  enable_package_manager_rules     = true
-
-  # Development-specific services
-  enable_content_management_rules = true
-  enable_development_tools_rules  = true
-  enable_api_graphql_rules        = true
-
-  # Disable production services
-  enable_travel_industry_rules    = false
-  enable_payment_processing_rules = false
-  enable_crm_rules                = false
-
-  tags = local.tags
-}
-```
-
-### Environment-Specific Configuration
-
-```hcl
-module "firewall" {
-  source = "./modules/firewall"
-
-  # ... basic configuration ...
-
-  # Enable all services
-  enable_core_infrastructure_rules   = true
-  enable_source_control_rules        = true
-  enable_container_registry_rules    = true
-  enable_package_manager_rules       = true
-  enable_content_management_rules    = true
-  enable_authentication_rules        = true
-  enable_communication_rules         = true
-  enable_development_tools_rules     = true
-  enable_api_graphql_rules           = true
-  enable_monitoring_analytics_rules  = true
-  enable_travel_industry_rules       = true
-  enable_payment_processing_rules    = true
-  enable_email_services_rules        = true
-  enable_crm_rules                   = true
-  enable_cdn_tunneling_rules         = true
-  enable_recruitment_rules           = true
-  enable_azure_services_rules        = true
-
-  # Custom environment addresses
-  development_source_addresses = ["10.163.0.0/18"]
-  staging_source_addresses     = ["10.162.0.0/18"]
-  production_source_addresses  = ["10.161.0.0/18"]
-  production_vm_subnet_addresses = ["10.161.33.0/24"]
-
-  tags = local.tags
-}
-```
-
-## Service Categories
-
-### Core Infrastructure (`enable_core_infrastructure_rules`)
-**Default: `true`**
-- AKS (Azure Kubernetes Service) rules
-- VPN connectivity rules
-- Basic networking (DNS, NTP, Azure service tags)
-
-### Source Control & CI/CD (`enable_source_control_rules`)
-**Default: `true`**
-- GitHub (general, packages, runner-specific)
-- GitLab
-- Container registries via source control
-
-### Container Registries (`enable_container_registry_rules`)
-**Default: `true`**
-- Docker Hub
-- Microsoft Container Registry (MCR)
-- Google Container Registry (GCR)
-- GitHub Container Registry (GHCR)
-- Quay.io
-- Kubernetes registries
-
-### Package Managers (`enable_package_manager_rules`)
-**Default: `true`**
-- Helm charts
-- Bitnami charts
-- External Secrets charts
-- Artifact Hub
-- Snapcraft
-
-### Content Management (`enable_content_management_rules`)
-**Default: `false`**
-- Contentful (all variants and CDN)
-
-### Authentication (`enable_authentication_rules`)
-**Default: `false`**
-- Auth0
-
-### Communication (`enable_communication_rules`)
-**Default: `false`**
-- Slack webhooks
-
-### Development Tools (`enable_development_tools_rules`)
-**Default: `false`**
-- Cypress (testing)
-- Optimizely (A/B testing)
-
-### API & GraphQL (`enable_api_graphql_rules`)
-**Default: `false`**
-- Apollo GraphQL (all endpoints)
-
-### Monitoring & Analytics (`enable_monitoring_analytics_rules`)
-**Default: `false`**
-- Grafana
-- Rapid7 logging
-
-### Travel Industry APIs (`enable_travel_industry_rules`)
-**Default: `false`**
-- Amadeus (test and production)
-- Deutsche Bahn
-- Sabre
-- Includes both application and network rules
-
-### Payment Processing (`enable_payment_processing_rules`)
-**Default: `false`**
-- Adyen (test and live environments)
-
-### Email Services (`enable_email_services_rules`)
-**Default: `false`**
-- SendGrid
-
-### CRM (`enable_crm_rules`)
-**Default: `false`**
-- Salesforce (common, dev/staging, and production environments)
-
-### CDN & Tunneling (`enable_cdn_tunneling_rules`)
-**Default: `false`**
-- Cloudflare tunnels and API
-
-### Recruitment (`enable_recruitment_rules`)
-**Default: `false`**
-- Jobylon
-
-### Azure PaaS Services (`enable_azure_services_rules`)
-**Default: `true`**
-- Azure Service Bus (environment-specific)
-- Azure App Configuration
+For detailed configuration examples and policy-based scenarios, see [EXAMPLES.md](./EXAMPLES.md).
 
 ## Module Structure
 
@@ -329,36 +82,85 @@ tf-azure-firewall/
 |------|-------------|------|---------|:--------:|
 | resource_group_name | The name of the resource group | `string` | n/a | yes |
 | location | The Azure region where resources will be created | `string` | n/a | yes |
-| virtual_hub_id | The ID of the virtual hub | `string` | n/a | yes |
-| dns_resolver_private_ip | The private IP address of the DNS resolver inbound endpoint | `string` | n/a | yes |
-| github_runner_network_address_space | The address space of the GitHub runner network | `list(string)` | n/a | yes |
-| github_runner_network_id | The ID of the GitHub runner virtual network | `string` | n/a | yes |
-| vpn_network_address_space | The address space of the VPN network | `string` | n/a | yes |
-| sku_tier | The SKU tier for the firewall | `string` | `"Standard"` | no |
+| hub_vnet_config | Configuration for Hub Virtual Network | `object({...})` | See description | no |
+| existing_hub_vnet_id | ID of existing hub virtual network (used when hub_vnet_config.create_vnet = false) | `string` | `null` | no |
+| existing_firewall_subnet_id | ID of existing AzureFirewallSubnet (used when hub_vnet_config.create_vnet = false) | `string` | `null` | no |
+| existing_management_subnet_id | ID of existing AzureFirewallManagementSubnet (used when hub_vnet_config.create_vnet = false) | `string` | `null` | no |
+| firewall_config | Configuration for Azure Firewall. Note: IDPS features require Premium SKU tier for security compliance. | `object({...})` | See description | no |
 | firewall_analytics_retention_days | The number of days to retain logs in the Log Analytics workspace | `number` | `30` | no |
 | firewall_analytics_daily_quota_gbs | The daily quota in GBs for the Log Analytics workspace | `number` | `1` | no |
 | tags | Tags that will be applied to all resources in this module | `map(string)` | `{}` | no |
-| enable_core_infrastructure_rules | Enable core infrastructure rules (AKS, Azure services, DNS, VPN) | `bool` | `true` | no |
-| enable_source_control_rules | Enable source control and CI/CD rules (GitHub, GitLab) | `bool` | `true` | no |
-| enable_container_registry_rules | Enable container registry rules (Docker Hub, MCR, GCR, GHCR, Quay) | `bool` | `true` | no |
-| enable_package_manager_rules | Enable package manager rules (Helm, NPM, Snapcraft) | `bool` | `true` | no |
-| enable_content_management_rules | Enable content management rules (Contentful) | `bool` | `false` | no |
-| enable_authentication_rules | Enable authentication service rules (Auth0) | `bool` | `false` | no |
-| enable_communication_rules | Enable communication service rules (Slack) | `bool` | `false` | no |
-| enable_development_tools_rules | Enable development tools rules (Cypress, Optimizely) | `bool` | `false` | no |
-| enable_api_graphql_rules | Enable API and GraphQL service rules (Apollo GraphQL) | `bool` | `false` | no |
-| enable_monitoring_analytics_rules | Enable monitoring and analytics rules (Grafana, Rapid7) | `bool` | `false` | no |
-| enable_travel_industry_rules | Enable travel industry API rules (Amadeus, Deutsche Bahn, Sabre) | `bool` | `false` | no |
-| enable_payment_processing_rules | Enable payment processing rules (Adyen) | `bool` | `false` | no |
-| enable_email_services_rules | Enable email service rules (SendGrid) | `bool` | `false` | no |
-| enable_crm_rules | Enable CRM service rules (Salesforce) | `bool` | `false` | no |
-| enable_cdn_tunneling_rules | Enable CDN and tunneling rules (Cloudflare) | `bool` | `false` | no |
-| enable_recruitment_rules | Enable recruitment service rules (Jobylon) | `bool` | `false` | no |
-| enable_azure_services_rules | Enable Azure PaaS service rules (Service Bus, App Configuration) | `bool` | `true` | no |
-| development_source_addresses | Source addresses for development environment | `list(string)` | `["10.163.0.0/18"]` | no |
-| staging_source_addresses | Source addresses for staging environment | `list(string)` | `["10.162.0.0/18"]` | no |
-| production_source_addresses | Source addresses for production environment | `list(string)` | `["10.161.0.0/18"]` | no |
-| production_vm_subnet_addresses | Source addresses for production VM subnet | `list(string)` | `["10.161.33.0/24"]` | no |
+| network_groups | Map of network groups with their CIDR ranges | `map(object({...}))` | `{}` | no |
+| network_policies | Map of network policies defining egress behavior per environment | `map(object({...}))` | `{}` | no |
+| default_egress_policy | Default egress policy for traffic not matching any specific network policy | `object({...})` | `{action = "Deny", priority = 900, log_traffic = true}` | no |
+| custom_application_rules | Map of custom application rule collections | `map(object({...}))` | `{}` | no |
+| custom_network_rules | Map of custom network rule collections | `map(object({...}))` | `{}` | no |
+| custom_nat_rules | Map of custom NAT rule collections | `map(object({...}))` | `{}` | no |
+
+### Complex Variable Details
+
+#### hub_vnet_config
+```hcl
+hub_vnet_config = {
+  vnet_name              = "hub-vnet"           # Name of the virtual network
+  address_space          = ["10.0.0.0/16"]     # Address space for the VNet
+  firewall_subnet_cidr   = "10.0.1.0/26"       # CIDR for AzureFirewallSubnet
+  management_subnet_cidr = "10.0.2.0/26"       # CIDR for AzureFirewallManagementSubnet
+  create_vnet            = true                 # Whether to create a new VNet
+}
+```
+
+#### firewall_config
+```hcl
+firewall_config = {
+  name                     = "azure-firewall"  # Name of the firewall
+  sku_tier                 = "Standard"        # SKU tier: Standard or Premium
+  threat_intel_mode        = "Deny"            # Threat intelligence mode
+  public_ip_count          = 1                 # Number of public IPs
+  public_ip_names          = []                # Custom public IP names
+  zones                    = []                # Availability zones
+  forced_tunneling         = false             # Enable forced tunneling
+  dns_servers              = []                # Custom DNS servers
+  private_ip_ranges        = []                # Private IP ranges for SNAT
+  idps_signature_overrides = []                # IDPS signature overrides (Premium only)
+  idps_traffic_bypass      = []                # IDPS traffic bypass rules (Premium only)
+}
+```
+
+#### network_groups
+```hcl
+network_groups = {
+  "production" = {
+    name             = "Production Network"
+    address_prefixes = ["10.1.0.0/16", "10.2.0.0/16"]
+    description      = "Production environment networks"
+  }
+}
+```
+
+#### network_policies
+```hcl
+network_policies = {
+  "production_policy" = {
+    network_group_keys = ["production"]
+    egress_policy      = "explicit_allow_only"  # allow_all_logged, explicit_allow_only, deny_all
+    priority_base      = 100
+    description        = "Production security policy"
+    allowed_destinations = {
+      fqdns     = ["api.example.com"]
+      addresses = ["8.8.8.8"]
+      ports     = ["443", "80"]
+      protocols = ["TCP"]
+    }
+    blocked_destinations = {
+      fqdns     = ["malicious.com"]
+      addresses = ["192.168.100.0/24"]
+      ports     = ["22"]
+      protocols = ["TCP"]
+    }
+  }
+}
+```
 
 ## Outputs
 
@@ -398,62 +200,6 @@ tf-azure-firewall/
 - Use descriptive names when customizing source addresses
 - Keep environment-specific configurations in separate variable files
 
-## Examples by Use Case
-
-### Development Environment
-```hcl
-# Minimal rules for development
-enable_core_infrastructure_rules = true
-enable_source_control_rules      = true
-enable_container_registry_rules  = true
-enable_package_manager_rules     = true
-enable_content_management_rules  = true  # If using Contentful
-enable_development_tools_rules   = true  # If using Cypress/Optimizely
-
-# Disable expensive business services
-enable_travel_industry_rules    = false
-enable_payment_processing_rules = false
-enable_crm_rules               = false
-```
-
-### Staging Environment
-```hcl
-# Production-like but with test endpoints
-enable_core_infrastructure_rules   = true
-enable_source_control_rules        = true
-enable_container_registry_rules    = true
-enable_package_manager_rules       = true
-enable_content_management_rules    = true
-enable_authentication_rules        = true
-enable_development_tools_rules     = true
-enable_api_graphql_rules           = true
-enable_monitoring_analytics_rules  = true
-enable_travel_industry_rules       = true  # Uses test endpoints
-enable_payment_processing_rules    = true  # Uses test endpoints
-enable_email_services_rules        = true
-enable_crm_rules                   = true  # Uses sandbox
-```
-
-### Production Environment
-```hcl
-# All business services enabled
-enable_core_infrastructure_rules   = true
-enable_source_control_rules        = true
-enable_container_registry_rules    = true
-enable_package_manager_rules       = true
-enable_content_management_rules    = true
-enable_authentication_rules        = true
-enable_communication_rules         = true
-enable_api_graphql_rules           = true
-enable_monitoring_analytics_rules  = true
-enable_travel_industry_rules       = true  # Uses production endpoints
-enable_payment_processing_rules    = true  # Uses live endpoints
-enable_email_services_rules        = true
-enable_crm_rules                   = true  # Uses production Salesforce
-enable_cdn_tunneling_rules         = true
-enable_recruitment_rules           = true
-enable_azure_services_rules        = true
-```
 
 ## 📜 License
 
