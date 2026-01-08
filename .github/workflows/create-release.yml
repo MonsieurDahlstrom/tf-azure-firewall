@@ -1,5 +1,8 @@
 name: Create tag and release
 
+permissions:
+  contents: write
+
 on:
     workflow_call:
         inputs:
@@ -9,7 +12,6 @@ on:
 
 jobs:
     create_release:
-        permissions: write-all
         runs-on: ubuntu-latest
         steps:
         - name: Checkout code

@@ -1,5 +1,8 @@
 name: Delete old main tag
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
@@ -7,7 +10,6 @@ on:
 
 jobs:
   delete_old_tag:
-    permissions: write-all
     runs-on: ubuntu-latest
     outputs: 
       major_version: ${{steps.parse_version.outputs.major_version}}
@@ -28,7 +30,6 @@ jobs:
             git push --delete origin ${{ steps.parse_version.outputs.major_version }}
 
   create_release:
-    permissions: write-all
     uses:  ./.github/workflows/create-release.yml
     needs: delete_old_tag
     with:
