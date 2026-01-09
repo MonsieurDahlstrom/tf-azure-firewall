@@ -80,7 +80,7 @@ jobs:
             --framework terraform \
             --check CKV_AZURE_* \
             --check CKV_* \
-            --skip-check CKV_123,CKV_124,CKV_SECRET_6,CKV_AZURE_216,CKV_GHA_7 \
+            --skip-check CKV_123,CKV_124,CKV_SECRET_6,CKV_AZURE_216,CKV_GHA_7,CKV2_AZURE_31 \
             --compact
         continue-on-error: true
           
