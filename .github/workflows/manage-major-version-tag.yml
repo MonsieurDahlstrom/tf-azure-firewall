@@ -1,5 +1,8 @@
 name: Manage major version tag
 
+permissions:
+  contents: write
+
 on:
   workflow_call:
     inputs:
@@ -17,7 +20,6 @@ on:
 
 jobs:
   manage_tags:
-    permissions: write-all
     runs-on: ubuntu-latest
     outputs: 
       major_version: ${{steps.parse_version.outputs.major_version}}
@@ -34,7 +36,6 @@ jobs:
           echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
 
   create_release:
-    permissions: write-all
     runs-on: ubuntu-latest
     needs: manage_tags
     steps:

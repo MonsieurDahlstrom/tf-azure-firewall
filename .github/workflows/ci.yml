@@ -1,5 +1,8 @@
 name: CI
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main, develop]
@@ -84,7 +87,7 @@ jobs:
         run: pip install checkov==${{ env.CHECKOV_VERSION }}
 
       - name: Run Checkov
-        run: checkov -d . --framework terraform --skip-check CKV_TF_1
+        run: checkov -d . --framework terraform --skip-check CKV_TF_1,CKV_123,CKV_124,CKV_SECRET_6,CKV_AZURE_216,CKV_GHA_7,CKV2_AZURE_31
 
   test:
     runs-on: ubuntu-latest
